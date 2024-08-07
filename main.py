@@ -128,8 +128,16 @@ def yayayayaya():
 
 # Login to robinhood
 # Your login credentials
-username = input("Enter your Robinhood username: ")
-password = input("Enter your Robinhood password: ")
+
+username = os.getenv("ROBINHOOD_USERNAME")
+password = os.getenv("ROBINHOOD_PASSWORD")
+
+if username and password:
+    pass
+else:
+    print("Login credentials not found, manual input required.")
+    username = input("Enter your Robinhood username: ")
+    password = input("Enter your Robinhood password: ")
 
 # RESTClient for Polygon.io
 polygon_api_key = os.getenv('POLYGON_API_KEY')
