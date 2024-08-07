@@ -1,4 +1,4 @@
-# Contributing to Vector Companion
+# Contributing to Vector Stock Market Bot
 
 Thank you for considering contributing to Vector Stock Market Bot! We welcome contributions of all kinds, including new features, bug fixes, documentation improvements, and more.
 
