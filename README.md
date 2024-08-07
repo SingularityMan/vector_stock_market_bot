@@ -6,7 +6,6 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 # Table of Contents
 - [Features](#Features)
 - [Installation](#Installation)
-- [Prerequisites](#Prerequisites)
 - [Installing Ollama](#Ollama)
 - [Usage](#Usage)
 - [Contributing](#Contributing)
@@ -37,8 +36,7 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 [Install ollama](https://ollama.com/) and run `llama3:8b-instruct-fp16` or any model you'd like. 
 If running a different model, update the model name in the `run()` function in `main.py`.
 
-## VRAM requirements
-Depends on which model you will run, but `llama3:8b-instruct-fp16` typically requires 16GB VRAM to run on your GPU.
+NOTE: Depends on which model you will run, but `llama3:8b-instruct-fp16` typically requires 16GB VRAM to run on your GPU.
 
 # Setting Up the Virtual Environment
 ## Create a virtual environment:
