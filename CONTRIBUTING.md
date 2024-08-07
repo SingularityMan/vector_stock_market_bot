@@ -18,7 +18,7 @@ Thank you for considering contributing to Vector Stock Market Bot! We welcome co
 
     ```bash
     git clone https://github.com/SingularityMan/vector_stock_market_bot.git
-    cd vector_companion
+    cd vector_stock_market_bot
     ```
 
 3. **Create a New Branch**: Create a new branch for your work to isolate your changes.
