@@ -226,8 +226,10 @@ if __name__ == '__main__':
                 try:
                     orders = r.orders.get_all_open_stock_orders()
                     for order in orders:
-                        print("Cancelling order:", order['id'])
-                        r.orders.cancel_stock_order(order['id'])
+                        for ticker in ticker_list:
+                            if ticker in order:
+                                print("Cancelling order:", order['id'])
+                                r.orders.cancel_stock_order(order['id'])
                     failed_transactions = []
                     queued_transactions = {}
                     time.sleep(30)
