@@ -68,14 +68,6 @@ MacOS/Linux:
 - ***Run the bot either before 9:30 AM or after 4:00 PM to avoid token expiration during transactions.***
 - ***Do not make any trades manually while the bot is running in order to avoid triggering the pattern trader rule.***
 
-Activate the virtual environment:
-
-### Windows
-`.\vector_stock_market_bot\Scripts\activate`
-
-### MacOS/Linux
-`source vector_stock_market_bot/bin/activate`
-
 ### Run the main script:
 
 `python main.py`
