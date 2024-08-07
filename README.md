@@ -25,6 +25,12 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 - Polygon.io API Key: Generate a REST API key using Polygon.io's free tier. [Instructions here](https://polygon.io/pricing).
 - Environment Variable: Store your API key in an environment variable named `POLYGON_API_KEY`. Do the same for `ROBINHOOD_USERNAME` and `ROBINHOOD_PASSWORD`.
 
+Clone the Repo:
+```
+git clone https://github.com/SingularityMan/vector_stock_market_bot.git
+cd vector_stock_market_bot
+```
+
 ## Environment Variable Set Up
 
 ### Windows
