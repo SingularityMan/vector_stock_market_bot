@@ -7,8 +7,7 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 - [Features](#Features)
 - [Installation](#Installation)
 - [Prerequisites](#Prerequisites)
-- [Installing Ollama](#Installing Ollama)
-- [Setting Up the Virtual Environment](#Setting Up the Virtual Environment)
+- [Installing Ollama](#Ollama)
 - [Usage](#Usage)
 - [Contributing](#Contributing)
 - [License](#License)
@@ -33,7 +32,7 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 ### MacOS/Linux
 `export POLYGON_API_KEY="your_api_key_here"`
 
-# Installing Ollama
+# Ollama
 
 [Install ollama](https://ollama.com/) and run `llama3:8b-instruct-fp16` or any model you'd like. 
 If running a different model, update the model name in the `run()` function in `main.py`.
