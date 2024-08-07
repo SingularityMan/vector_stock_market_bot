@@ -43,7 +43,7 @@ NOTE: Depends on which model you will run, but `llama3:8b-instruct-fp16` typical
 
 `python -m venv vector_stock_market_bot`
 
-*Windows:*
+Windows:
 
 `.\vector_stock_market_bot\Scripts\activate`
 
