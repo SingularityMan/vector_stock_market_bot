@@ -24,6 +24,9 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 - Robinhood Account: Create a Robinhood account if you don't have one.
 - Polygon.io API Key: Generate a REST API key using Polygon.io's free tier. [Instructions here](https://polygon.io/pricing).
 - Environment Variable: Store your API key in an environment variable named `POLYGON_API_KEY`. Do the same for `ROBINHOOD_USERNAME` and `ROBINHOOD_PASSWORD`.
+- [Install ollama](https://ollama.com/) and run `llama3:8b-instruct-fp16` or any model you'd like. If running a different model, update the model name in the `run()` function in `main.py`.
+
+NOTE: Depends on which model you will run, but `llama3:8b-instruct-fp16` typically requires 16GB VRAM to run on your GPU.
 
 ## Environment Variable Set Up
 
@@ -39,13 +42,6 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 `export ROBINHOOD_USERNAME="your_username_here"`
 
 `export ROBINHOOD_PASSWORD="your_password_here"`
-
-# Ollama
-
-[Install ollama](https://ollama.com/) and run `llama3:8b-instruct-fp16` or any model you'd like. 
-If running a different model, update the model name in the `run()` function in `main.py`.
-
-NOTE: Depends on which model you will run, but `llama3:8b-instruct-fp16` typically requires 16GB VRAM to run on your GPU.
 
 # Setting Up the Virtual Environment
 
