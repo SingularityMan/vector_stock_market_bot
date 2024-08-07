@@ -20,12 +20,12 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 - Daily Operations: Runs indefinitely, performing one trade per ticker per day, and evenly distributing buying power among them.
   
 # Installation
-### Prerequisites
+
 - Robinhood Account: Create a Robinhood account if you don't have one.
 - Polygon.io API Key: Generate a REST API key using Polygon.io's free tier. [Instructions here](https://polygon.io/pricing).
 - Environment Variable: Store your API key in an environment variable named POLYGON_API_KEY.
 
-# Environment Variable Set Up
+## Environment Variable Set Up
 
 ### Windows
 `setx POLYGON_API_KEY "your_api_key_here"`
@@ -40,7 +40,6 @@ If running a different model, update the model name in the `run()` function in `
 NOTE: Depends on which model you will run, but `llama3:8b-instruct-fp16` typically requires 16GB VRAM to run on your GPU.
 
 # Setting Up the Virtual Environment
-## Create a virtual environment:
 
 `python -m venv vector_stock_market_bot`
 
@@ -57,10 +56,10 @@ MacOS/Linux:
 `pip install -r requirements.txt`
 
 # Usage
-## Important Notes
-- Run the bot either before 9:30 AM or after 4:00 PM to avoid token expiration during transactions.
+***IMPORTANT NOTE:***
+- ***Run the bot either before 9:30 AM or after 4:00 PM to avoid token expiration during transactions.***
 - ***Do not make any trades manually while the bot is running in order to avoid triggering the pattern trader rule.***
-### Steps to Run
+
 Activate the virtual environment:
 
 ### Windows
