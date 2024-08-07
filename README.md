@@ -109,7 +109,7 @@ ticker_list = [
 Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for details on our code of conduct and the process for submitting pull requests.
 
 # License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/SingularityMan/vector_stock_market_bot/tree/main?tab=MIT-1-ov-file#) file for details.
+This project is licensed under the MIT License. See the [LICENSE.md](https://github.com/SingularityMan/vector_stock_market_bot/tree/main?tab=MIT-1-ov-file#) file for details.
 
 # Disclaimer
 I am not a financial advisor. This bot is provided as-is, without any guarantees or warranties. You are using this bot at your own risk, and I am not responsible for any financial losses or other damages that may result from its use. Always do your own research and consider consulting with a qualified financial advisor before making any investment decisions.
