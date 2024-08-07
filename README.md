@@ -3,6 +3,17 @@
 
 Welcome to the Vector Stock Market Bot! This bot is designed to automatically rebalance your Robinhood portfolio by gathering information about each ticker and performing buy/sell actions as needed. It operates hands-free, ensuring balanced transactions and avoiding the Pattern Trader rule.
 
+# Table of Contents
+- [Features](#Features)
+- [Installation](#Installation)
+- [Prerequisites](#Prerequisites)
+- [Installing Ollama](#Installing Ollama)
+- [Setting Up the Virtual Environment](#Setting Up the Virtual Environment)
+- [Usage](#Usage)
+- [Contributing](#Contributing)
+- [License](#License)
+- [Disclaimer](#Disclaimer)
+
 # Features
 
 - Automated Rebalancing: Uses robin_stocks and Polygon.io's REST API client to gather information on stocks within a given portfolio and makes buy/sell decisions based on the analysis.
