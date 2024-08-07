@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: polygon-api-client
+Version: 1.14.2
+Summary: Official Polygon.io REST and Websocket client.
+Home-page: https://polygon.io
+License: MIT
+Keywords: polygon,free,rest,stock,market,data,api,polygon.io,websocket,client
+Author: polygon.io
+Requires-Python: >=3.8,<4.0
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Dist: certifi (>=2022.5.18,<2025.0.0)
+Requires-Dist: urllib3 (>=1.26.9,<3.0.0)
+Requires-Dist: websockets (>=10.3,<13.0)
+Project-URL: Documentation, https://polygon.io/docs
+Project-URL: Repository, https://github.com/polygon-io/client-python
