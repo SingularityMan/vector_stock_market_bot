@@ -77,7 +77,7 @@ Activate the virtual environment:
 
 - Allow the bot to run indefinitely.
 
-#Portfolio
+# Portfolio
 
 If you would like to change the tickers to match your own portfolio, feel free to update `ticker_list`:
 
