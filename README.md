@@ -23,14 +23,22 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 
 - Robinhood Account: Create a Robinhood account if you don't have one.
 - Polygon.io API Key: Generate a REST API key using Polygon.io's free tier. [Instructions here](https://polygon.io/pricing).
-- Environment Variable: Store your API key in an environment variable named POLYGON_API_KEY.
+- Environment Variable: Store your API key in an environment variable named `POLYGON_API_KEY`. Do the same for `ROBINHOOD_USERNAME` and `ROBINHOOD_PASSWORD`.
 
 ## Environment Variable Set Up
 
 ### Windows
 `setx POLYGON_API_KEY "your_api_key_here"`
+
+`setx ROBINHOOD_USERNAME "your_username_here"`
+
+`setx ROBINHOOD_PASSWORD "your_password_here"`
 ### MacOS/Linux
 `export POLYGON_API_KEY="your_api_key_here"`
+
+`export ROBINHOOD_USERNAME="your_username_here"`
+
+`export ROBINHOOD_PASSWORD="your_password_here"`
 
 # Ollama
 
@@ -72,7 +80,7 @@ Activate the virtual environment:
 
 `python main.py`
 
-- Enter your Robinhood username and password when prompted.
+- If your Robinhood username/password are not found, enter your Robinhood username and password manually when prompted.
 
 - Allow the bot to run indefinitely.
 
