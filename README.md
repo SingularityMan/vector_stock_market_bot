@@ -6,7 +6,6 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 # Table of Contents
 - [Features](#Features)
 - [Installation](#Installation)
-- [Installing Ollama](#Ollama)
 - [Usage](#Usage)
 - [Updating your portfolio](#Portfolio)
 - [Contributing](#Contributing)
@@ -61,7 +60,7 @@ MacOS/Linux:
 
 `source vector_stock_market_bot/bin/activate`
 
-## Install the required packages:
+Install the required packages:
 
 `pip install -r requirements.txt`
 
