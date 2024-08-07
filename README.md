@@ -8,6 +8,7 @@ Welcome to the Vector Stock Market Bot! This bot is designed to automatically re
 - [Installation](#Installation)
 - [Installing Ollama](#Ollama)
 - [Usage](#Usage)
+- [Updating your portfolio](#Portfolio)
 - [Contributing](#Contributing)
 - [License](#License)
 - [Disclaimer](#Disclaimer)
@@ -75,6 +76,33 @@ Activate the virtual environment:
 - Enter your Robinhood username and password when prompted.
 
 - Allow the bot to run indefinitely.
+
+#Portfolio
+
+If you would like to change the tickers to match your own portfolio, feel free to update `ticker_list`:
+
+
+```
+# Get ticker list of blue chip stocks and historically successfull index funds
+ticker_list = [
+    'AAPL', 'AGG', 'AMT', 'AMZN', 'ARKK',
+    'BAC', 'BKX', 'BND', 'BNDX', 'DGRO', 'CNI',
+    'DKNG', 'DUK', 'EPR', 'F', 'FAS',
+    'FNGU', 'GOOG', 'GS', 'HDV', 'HRZN',
+    'IEMG', 'INTC', 'IVR', 'IVV', 'IWM', 'IXJ',
+    'IYR', 'JNJ', 'JPM', 'KBWB', 'KO',
+    'KRE', 'LCID', 'LLY', 'LTC', 'MAIN',
+    'META', 'MS', 'MSFT', 'NEE', 'NOBL',
+    'NVDA', 'NVO', 'O', 'PFE', 'PG',
+    'PSEC', 'QQQ', 'SCHD', 'SMCI', 'SLG', 'SOXL',
+    'SPG', 'SPHD', 'SPXL', 'SPY', 'T',
+    'TNA', 'TQQQ', 'TSLA', 'UNH', 'UNM', 'UPRO',
+    'USB', 'VHT', 'VIG', 'VNQ', 'VTI',
+    'VXUS', 'VYM', 'WFC', 'WMT', 'XLF',
+    'XLP', 'XLU', 'XLV', 'XOM'
+]
+```
+
 
 # Contributing
 
