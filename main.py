@@ -236,7 +236,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     print(e)
                     print("Error cancelling orders. Continuing.")
-                    token_expires_at, token = refresh_token(token_expires_at, token)
+                    token_expires_at, token = refresh_token(username, password, token_expires_at, token)
                     continue
 
                 continue
