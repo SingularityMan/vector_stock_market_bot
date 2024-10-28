@@ -5,12 +5,26 @@ import json
 import robin_stocks.robinhood as r
 import datetime
 import pytz
+import torch
 from polygon import RESTClient
 from polygon.rest.models import (
     TickerNews, MarketStatus, MarketHoliday,
 )
 
-def run(user_input):
+def run(user_input, context_length):
+
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        temperature = torch.cuda.temperature(device)
+        print(f"GPU Temperature: {temperature}°C")
+        if temperature >= 85:
+            while temperature >= 60:
+                print("Cooldown initiated. Waiting for cooldown to continue...")
+                print(f"GPU Temperature: {temperature}°C")
+                temperature = torch.cuda.temperature(device)
+                time.sleep(1)
+    else:
+        print("No GPU available.")
 
     # Use Ollama's API to generate a response
     url = "http://localhost:11434/api/chat"
@@ -27,7 +41,7 @@ def run(user_input):
         "stream": False,
         "options": {
             "temperature": 0.1,
-            "num_ctx": 8000
+            "num_ctx": context_length
             # "stop": []
         }
     }
@@ -63,11 +77,11 @@ def get_market_holidays(api_key):
     holidays = client.get_market_holidays()
     return holidays
 
-def generate_text(user_input):
+def generate_text(user_input, context_length):
     response = ""
     while response is None or response.strip() == "" or response == " ":
         try:
-            response = run(user_input)
+            response = run(user_input, context_length)
             if response.startswith('"') and response.endswith('"'):
                 response = response[1:-1]
             response = response.strip()
@@ -91,18 +105,18 @@ def get_quarterly_earnings(ticker):
     info = r.stocks.get_earnings(ticker)
     return info
 
-def make_decision(response):
-    user_input = "<s>[INST]" \
+def make_decision(response, context_length):
+    user_input = "" \
                   "Review this information and respond with a one-word response and include the following: [buy], [sell], or [hold].\n" \
                   "Here is the following information:\n\n" \
                   "{}\n\n" \
                   "If there is no text or the information is not clear, respond with [hold].\n" \
-                  "[/INST]".format(response)
+                  "".format(response)
 
-    decision = generate_text(user_input)
+    decision = generate_text(user_input, context_length)
     while decision is None or decision.strip() == "" or decision == " ":
         print("Decision is None. Trying again.")
-        decision = generate_text(user_input)
+        decision = generate_text(user_input, context_length)
     return decision
 
 def yayayayaya():
@@ -236,7 +250,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     print(e)
                     print("Error cancelling orders. Continuing.")
-                    token_expires_at, token = refresh_token(token_expires_at, token)
+                    token_expires_at, token = refresh_token(username, password, token_expires_at, token)
                     continue
 
                 continue
@@ -314,60 +328,80 @@ if __name__ == '__main__':
                     # Get stock news
                     all_stock_news = []
 
-                    # Get ticker info, fundamentals and quarterly earnings.
+                    # Get ticker info, fundamentals, and quarterly earnings.
                     info = get_ticker_info(ticker)
                     ticker_fundamentals = get_advanced_ticker_info(ticker)
                     ticker_earnings = get_quarterly_earnings(ticker)
 
                     try:
-
                         polygon_news = client.list_ticker_news(ticker, limit=5)
                         for i, news in enumerate(polygon_news):
-                            #print(ticker, "Call:", i)
                             all_stock_news.append(news.description)
-                            if i == 7:
-                                break
-                            # print(news.article_url)
                     except Exception as e:
                         print("Error:", e, "\nWaiting 60 seconds before continuing.")
                         time.sleep(60)
-                        pass
+
+                    # Filter out None values
+                    all_stock_news = [text for text in all_stock_news if text is not None]
 
                     # Join all the news together
-                    for text in all_stock_news:
-                        if text is None:
-                            all_stock_news.remove(text)
-                        else:
-                            #print(text)
-                            pass
-                    try:
-                        all_stock_news = "".join(all_stock_news)
-                    except TypeError:
-                        all_stock_news = ""
-                        pass
+                    all_stock_news = "".join(all_stock_news)
 
                     # Generate a response to the news
-                    news = generate_text("<s>[INST]Summarize this text, highlighting important developments regarding the ticker, such as earnings reports, financials, announcements, events, etc.\n"
-                                                "The ticker is {}.\n"
-                                                "Here is the text:\n\n{}\n[/INST]".format(ticker, all_stock_news))
+                    news = generate_text(
+                        f"Summarize this text, highlighting important developments regarding the ticker, such as earnings reports, financials, announcements, events, etc.\n"
+                        f"The ticker is {ticker}.\n"
+                        f"Here is the text:\n\n{all_stock_news}\n"
+                        f"Ticker info: {info}\n"
+                        f"Ticker fundamentals: {ticker_fundamentals}\n"
+                        f"Ticker earnings: {ticker_earnings}",
+                        12000
+                    )
+
+                    # Save to JSON file
+                    ticker_file_path = os.path.join("ticker_logs", f"{ticker}.json")
+
+                    # Check if the file exists and load existing data, otherwise initialize an empty list
+                    if os.path.exists(ticker_file_path):
+                        with open(ticker_file_path, "r", encoding="utf-8") as f:
+                            ticker_data = json.load(f)
+                    else:
+                        ticker_data = []
+
+                    # Append the new generated news
+                    ticker_data.append(news)
+
+                    # Write updated data back to the file
+                    with open(ticker_file_path, "w", encoding="utf-8") as f:
+                        json.dump(ticker_data, f, indent=4)
+
+                    joined_ticker_data = ' '.join(ticker_data)
+                    context_length = len(joined_ticker_data.split()*3)
+                    if context_length > 32000:
+                        context_length = 32000
 
                     # Evaluate stock news and performance
                     stock = ticker
                     stock_price = info['last_trade_price']
-                    user_input = ("<s>[INST]"
-                                  "You are a stock market expert.\n"
-                                  "You will review news on a ticker and make an educated guess on whether to buy, sell or hold.\n"
-                                  "Be as brief as possible.\n"
-                                  "Ticker name: {}\n"
-                                  "ticker price: {}\n"
-                                  "Additional ticker info: \n\n{}\n\n"
-                                  "ticker_fundamentals: \n\n{}\n\n"
-                                  "ticker earnings: \n\n{}\n\n"
-                                  "ticker news: \n\n{}\n\n"
-                                  "Give equal weight to both the news and the stock's performance.\n"
-                                  "[/INST]".format(stock, stock_price, info, ticker_fundamentals, ticker_earnings, news))
+                    user_input = f"You are a stock market expert.\n" \
+                        f"You will review this information on a ticker and make an educated guess on whether to buy, sell or hold:\n\n" \
+                        f"Ticker History: {' '.join(joined_ticker_data)}\n" \
+                        f"Ticker name: {stock}\n" \
+                        f"Ticker price: {stock_price}\n" \
+                        f"Additional ticker info: \n\n{info}\n\n" \
+                        f"Ticker fundamentals: \n\n{ticker_fundamentals}\n\n" \
+                        f"Ticker earnings: \n\n{ticker_earnings}\n\n" \
+                        f"Ticker news: \n\n{news}\n\n" \
+                        f"Give equal weight to both the news and the stock's performance.\n" \
 
-                    response = generate_text(user_input)
+                    response = generate_text(user_input, context_length)
+
+                    # Append response to the ticker data
+                    ticker_data.append("\n\n" + response)
+
+                    # Write updated data back to the file
+                    with open(ticker_file_path, "w", encoding="utf-8") as f:
+                        json.dump(ticker_data, f, indent=4)
 
                     try:
                         #if response.startswith('"') and response.endswith('"'):
@@ -376,7 +410,7 @@ if __name__ == '__main__':
                         print(ticker+":", response)
 
                         # Make a decision to buy, sell, or hold based on the response
-                        decision = make_decision(response).lower()
+                        decision = make_decision(response, 4096).lower()
                         print(decision)
 
                     except Exception as e:
@@ -518,5 +552,5 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             print("Error. Continuing.")
-            token_expires_at, token = refresh_token(token_expires_at, token)
+            token_expires_at, token = refresh_token(username, password, token_expires_at, token)
             continue
