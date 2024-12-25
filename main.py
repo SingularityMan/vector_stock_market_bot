@@ -170,7 +170,21 @@ if __name__ == '__main__':
 
     # Get ticker list of blue chip stocks and historically successful index funds
     ticker_list = [
-        'IAG', 'KGC', 'DRUG', 'LAUR', 'PTVE'
+        'AAPL', 'AGG', 'AMT', 'AMZN', 'ARKK',
+        'BAC', 'BKX', 'BND', 'BNDX', 'DGRO', 'CNI',
+        'DKNG', 'DUK', 'EPR', 'F', 'FAS',
+        'FNGU', 'GOOG', 'GS', 'HDV', 'HRZN',
+        'IEMG', 'INTC', 'IVR', 'IVV', 'IWM', 'IXJ',
+        'IYR', 'JNJ', 'JPM', 'KBWB', 'KO',
+        'KRE', 'LCID', 'LLY', 'LTC', 'MAIN',
+        'META', 'MS', 'MSFT', 'NEE', 'NOBL',
+        'NVDA', 'NVO', 'O', 'PFE', 'PG',
+        'PSEC', 'QQQ', 'SCHD', 'SMCI', 'SLG', 'SOXL',
+        'SPG', 'SPHD', 'SPXL', 'SPY', 'T',
+        'TNA', 'TQQQ', 'TSLA', 'UNH', 'UNM', 'UPRO',
+        'USB', 'VHT', 'VIG', 'VNQ', 'VTI',
+        'VXUS', 'VYM', 'WFC', 'WMT', 'XLF',
+        'XLP', 'XLU', 'XLV', 'XOM'
     ]
 
     valid_tickers = []
