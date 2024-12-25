@@ -5,7 +5,7 @@ import json
 import robin_stocks.robinhood as r
 import datetime
 import pytz
-import torch
+import gpustat
 from polygon import RESTClient
 from polygon.rest.models import (
     TickerNews, MarketStatus, MarketHoliday,
@@ -13,35 +13,32 @@ from polygon.rest.models import (
 
 def run(user_input, context_length):
 
-    if torch.cuda.is_available():
-        device = torch.cuda.current_device()
-        temperature = torch.cuda.temperature(device)
-        print(f"GPU Temperature: {temperature}°C")
-        if temperature >= 85:
-            while temperature >= 60:
-                print("Cooldown initiated. Waiting for cooldown to continue...")
-                print(f"GPU Temperature: {temperature}°C")
-                temperature = torch.cuda.temperature(device)
-                time.sleep(1)
-    else:
-        print("No GPU available.")
+    stats = gpustat.GPUStatCollection.new_query()[0]
+    print("GPU temperature:", stats.temperature)
+    if stats.temperature >= 85:
+        while stats.temperature >= 60:
+            print("Cooldown initiated. Waiting for cooldown to continue...")
+            print(f"GPU Temperature: {stats.temperature}°C")
+            stats = gpustat.GPUStatCollection.new_query()[0]
+            time.sleep(1)
 
     # Use Ollama's API to generate a response
-    url = "http://localhost:11434/api/chat"
+    url = "http://localhost:11434/api/generate"
     headers = {
         "Content-Type": "application/json"
     }
 
-    messages = [{"role": "user", "content": user_input}]
+    #messages = [{"role": "user", "content": user_input}]
 
     # Define the payload
     payload = {
-        "model": "llama3.1:8b-instruct-fp16",
-        "messages": messages,
+        "model": "qwq:32b-preview-q8_0",
+        "prompt": user_input,
         "stream": False,
         "options": {
             "temperature": 0.1,
-            "num_ctx": context_length
+            "num_ctx": context_length,
+            "num_batch": 512
             # "stop": []
         }
     }
@@ -49,22 +46,23 @@ def run(user_input, context_length):
     # Make the POST request, extract text response
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     response_data = response.json()
-    text_response = response_data.get("message", {}).get("content", "No response received")
+    text_response = response_data.get("response", "No response received.")
     return text_response
 
 def refresh_token(username, password, token_expires_at, token):
 
     # Check if the token is expired
-    if time.time() > token_expires_at:
-        # If the token is expired, refresh it
-        print("Token expired. Refreshing token.")
-        r.logout()
-        login = r.login(username, password, expiresIn=60*60*12)
-        token_expires_at = time.time()+login['expires_in']
-        token = login['access_token']
-        # print("New Token:", token)
-    else:
-        print("Token is still valid. Expires in", token_expires_at-time.time(), "seconds.")
+    #if time.time() > token_expires_at:
+    # If the token is expired, refresh it
+    #print("Token expired. Refreshing token.")
+    login = r.login(username, password, expiresIn=60 * 60 * 12)
+    r.logout()
+    login = r.login(username, password, expiresIn=60*60*12)
+    token_expires_at = time.time()+login['expires_in']
+    token = login['access_token']
+    # print("New Token:", token)
+    #else:
+    #    print("Token is still valid. Expires in", token_expires_at-time.time(), "seconds.")
         # print("Token:", token)
     return token_expires_at, token
 
@@ -170,23 +168,9 @@ if __name__ == '__main__':
 
     history = ['']
 
-    # Get ticker list of blue chip stocks and historically successfull index funds
+    # Get ticker list of blue chip stocks and historically successful index funds
     ticker_list = [
-        'AAPL', 'AGG', 'AMT', 'AMZN', 'ARKK',
-        'BAC', 'BKX', 'BND', 'BNDX', 'DGRO', 'CNI',
-        'DKNG', 'DUK', 'EPR', 'F', 'FAS',
-        'FNGU', 'GOOG', 'GS', 'HDV', 'HRZN',
-        'IEMG', 'INTC', 'IVR', 'IVV', 'IWM', 'IXJ',
-        'IYR', 'JNJ', 'JPM', 'KBWB', 'KO',
-        'KRE', 'LCID', 'LLY', 'LTC', 'MAIN',
-        'META', 'MS', 'MSFT', 'NEE', 'NOBL',
-        'NVDA', 'NVO', 'O', 'PFE', 'PG',
-        'PSEC', 'QQQ', 'SCHD', 'SMCI', 'SLG', 'SOXL',
-        'SPG', 'SPHD', 'SPXL', 'SPY', 'T',
-        'TNA', 'TQQQ', 'TSLA', 'UNH', 'UNM', 'UPRO',
-        'USB', 'VHT', 'VIG', 'VNQ', 'VTI',
-        'VXUS', 'VYM', 'WFC', 'WMT', 'XLF',
-        'XLP', 'XLU', 'XLV', 'XOM'
+        'IAG', 'KGC', 'DRUG', 'LAUR', 'PTVE'
     ]
 
     valid_tickers = []
@@ -316,7 +300,7 @@ if __name__ == '__main__':
                 # Checks if all the tickers have been processed before skipping.
                 # If the tickers have not been processed and the ticker is in the failed transactions list or the queued transaction list, it will skip.
                 # This is added in the event an error is triggered and the bot needs to continue where it left off.
-                if ticker_index >= len(ticker_list):
+                if ticker_index > len(ticker_list):
                     if ticker not in failed_transactions:
                         continue
                 elif ticker_index < len(ticker_list):
@@ -334,12 +318,14 @@ if __name__ == '__main__':
                     ticker_earnings = get_quarterly_earnings(ticker)
 
                     try:
-                        polygon_news = client.list_ticker_news(ticker, limit=5)
+                        polygon_news = client.list_ticker_news(ticker, limit=3)
                         for i, news in enumerate(polygon_news):
                             all_stock_news.append(news.description)
                     except Exception as e:
-                        print("Error:", e, "\nWaiting 60 seconds before continuing.")
-                        time.sleep(60)
+                        print("Error:", e, "\nWaiting 3 minutes before continuing.")
+                        if ticker not in failed_transactions:
+                            failed_transactions.append(ticker)
+                        time.sleep(180)
 
                     # Filter out None values
                     all_stock_news = [text for text in all_stock_news if text is not None]
@@ -348,15 +334,16 @@ if __name__ == '__main__':
                     all_stock_news = "".join(all_stock_news)
 
                     # Generate a response to the news
-                    news = generate_text(
+                    news = all_stock_news
+                    """generate_text(
                         f"Summarize this text, highlighting important developments regarding the ticker, such as earnings reports, financials, announcements, events, etc.\n"
                         f"The ticker is {ticker}.\n"
                         f"Here is the text:\n\n{all_stock_news}\n"
                         f"Ticker info: {info}\n"
                         f"Ticker fundamentals: {ticker_fundamentals}\n"
                         f"Ticker earnings: {ticker_earnings}",
-                        12000
-                    )
+                        8192
+                    )"""
 
                     # Save to JSON file
                     ticker_file_path = os.path.join("ticker_logs", f"{ticker}.json")
@@ -376,7 +363,8 @@ if __name__ == '__main__':
                         json.dump(ticker_data, f, indent=4)
 
                     joined_ticker_data = ' '.join(ticker_data)
-                    context_length = len(joined_ticker_data.split()*3)
+                    context_length = 6000
+                    #len(joined_ticker_data.split()*3)
                     if context_length > 32000:
                         context_length = 32000
 
@@ -384,15 +372,14 @@ if __name__ == '__main__':
                     stock = ticker
                     stock_price = info['last_trade_price']
                     user_input = f"You are a stock market expert.\n" \
-                        f"You will review this information on a ticker and make an educated guess on whether to buy, sell or hold:\n\n" \
-                        f"Ticker History: {' '.join(joined_ticker_data)}\n" \
+                        f"You will review this information on a ticker and make an educated guess on whether to buy or sell. No holding allowed:\n\n" \
                         f"Ticker name: {stock}\n" \
+                        f"Ticker news: \n\n{news}\n\n" \
                         f"Ticker price: {stock_price}\n" \
                         f"Additional ticker info: \n\n{info}\n\n" \
                         f"Ticker fundamentals: \n\n{ticker_fundamentals}\n\n" \
                         f"Ticker earnings: \n\n{ticker_earnings}\n\n" \
-                        f"Ticker news: \n\n{news}\n\n" \
-                        f"Give equal weight to both the news and the stock's performance.\n" \
+                        f"Make sure your decision always ends with either [buy] or [sell]. No holding allowed.\n" \
 
                     response = generate_text(user_input, context_length)
 
@@ -410,8 +397,13 @@ if __name__ == '__main__':
                         print(ticker+":", response)
 
                         # Make a decision to buy, sell, or hold based on the response
-                        decision = make_decision(response, 4096).lower()
-                        print(decision)
+                        #decision = make_decision(response, 4096).lower()
+                        if "[buy]" in response.lower():
+                            decision = "[buy]"
+                        elif "[sell]" in response.lower():
+                            decision = "[sell]"
+                        else:
+                            raise Exception("Error: No decision found.")
 
                     except Exception as e:
                         print(e, "Continuing.")
