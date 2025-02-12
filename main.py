@@ -170,21 +170,7 @@ if __name__ == '__main__':
 
     # Get ticker list of blue chip stocks and historically successful index funds
     ticker_list = [
-        'AAPL', 'AGG', 'AMT', 'AMZN', 'ARKK',
-        'BAC', 'BKX', 'BND', 'BNDX', 'DGRO', 'CNI',
-        'DKNG', 'DUK', 'EPR', 'F', 'FAS',
-        'FNGU', 'GOOG', 'GS', 'HDV', 'HRZN',
-        'IEMG', 'INTC', 'IVR', 'IVV', 'IWM', 'IXJ',
-        'IYR', 'JNJ', 'JPM', 'KBWB', 'KO',
-        'KRE', 'LCID', 'LLY', 'LTC', 'MAIN',
-        'META', 'MS', 'MSFT', 'NEE', 'NOBL',
-        'NVDA', 'NVO', 'O', 'PFE', 'PG',
-        'PSEC', 'QQQ', 'SCHD', 'SMCI', 'SLG', 'SOXL',
-        'SPG', 'SPHD', 'SPXL', 'SPY', 'T',
-        'TNA', 'TQQQ', 'TSLA', 'UNH', 'UNM', 'UPRO',
-        'USB', 'VHT', 'VIG', 'VNQ', 'VTI',
-        'VXUS', 'VYM', 'WFC', 'WMT', 'XLF',
-        'XLP', 'XLU', 'XLV', 'XOM'
+        'IAG', 'KGC', 'PTVE', 'LAUR'
     ]
 
     valid_tickers = []
@@ -377,7 +363,7 @@ if __name__ == '__main__':
                         json.dump(ticker_data, f, indent=4)
 
                     joined_ticker_data = ' '.join(ticker_data)
-                    context_length = 6000
+                    context_length = 10000
                     #len(joined_ticker_data.split()*3)
                     if context_length > 32000:
                         context_length = 32000
@@ -462,93 +448,121 @@ if __name__ == '__main__':
                 sorted_tickers = sorted(tickers, key=lambda ticker: (
                 queued_transactions[ticker] != 'sell', queued_transactions[ticker]))
 
+                sell_count = 0
+
+                for sell in sorted_tickers:
+                    try:
+                        if queued_transactions[ticker] == "sell":
+                            sell_count += 1
+
+                            if decision == "sell" and day_trades < 3:
+                                if ticker in holdings:
+                                    print("Selling", ticker)
+                                    trade = r.orders.order_sell_fractional_by_quantity(ticker,
+                                                                                       float(holdings[ticker]['quantity']),
+                                                                                       timeInForce='gfd',
+                                                                                       extendedHours=False)
+                                    print(trade)
+                                    print("Trade id:", trade['id'])
+                                    time.sleep(30)
+                                    trade = r.orders.get_stock_order_info(trade['id'])
+                                    if trade['state'] != "filled":
+                                        print("Trade not filled. Continuing.")
+                                        if ticker not in failed_transactions:
+                                            failed_transactions.append(ticker)
+                                        continue
+                                    print("Sold", ticker)
+                                    if ticker in failed_transactions:
+                                        failed_transactions.remove(ticker)
+                                else:
+                                    print(ticker, "not in holdings. Continuing.")
+                                    if ticker in failed_transactions:
+                                        failed_transactions.remove(ticker)
+
+                            elif day_trades >= 3:  # Cancel all pending DECISIONS if day trade limit is reached. No transactions will be made.
+                                if ticker in failed_transactions:
+                                    failed_transactions.remove(ticker)
+                                del queued_transactions[ticker]
+                                print("Day trade limit reached. Continuing.")
+
+                            del queued_transactions[ticker]
+
+                    except Exception as e:
+                        print("Error:", e)
+                        if ticker in failed_transactions:
+                            failed_transactions.remove(ticker)
+                        del queued_transactions[ticker]
+
+                buying_power = float(r.account.load_phoenix_account(info='account_buying_power')['amount'])
+
                 # Iterate through the sorted list, selling tickers first before buying the rest.
                 # This ensures no leftover buying power and therefore no missed trades.
                 for ticker in sorted_tickers:
-                    decision = queued_transactions[ticker]
+                    try:
+                        decision = queued_transactions[ticker]
 
-                    # Get the currently available buying power
-                    actual_buying_power = None
-                    actual_buying_power = float(r.account.load_phoenix_account(info='account_buying_power')['amount'])
+                        # Get the currently available buying power.
+                        actual_buying_power = float(
+                            r.account.load_phoenix_account(info='account_buying_power')['amount'])
 
-                    # Day trade check.
-                    # No transactions will be made if the user has made 3 day trades in a 5 day period.
-                    day_trades = len(r.account.get_day_trades()['equity_day_trades'])
+                        # Day trade check.
+                        day_trades = len(r.account.get_day_trades()['equity_day_trades'])
 
-                    # Perform the trade, depending on the decision.
-                    if (decision == "buy" or decision == "hold") and day_trades < 3: # Buy if decision is to buy or hold.
-                        if actual_buying_power > 1:
-                            print("Purchasing {}".format(ticker))
-                            print("Buying power: {}".format(buying_power))
+                        # Only proceed if the decision is to buy/hold and day trades are within limit.
+                        if decision in ["buy", "hold"] and day_trades < 3:
+                            if actual_buying_power > 1:
+                                print(f"Buying power: {actual_buying_power}")
 
-                            # Determine if the user has enough buying power to buy the stock.
-                            # The purchase is evenly distributed across your portfolio.
-                            if buying_power / len(ticker_list) < 1:
-                                trade = r.orders.order_buy_fractional_by_price(ticker, 1, timeInForce='gfd',
-                                                                               extendedHours=False)
-                            elif buying_power / len(ticker_list) > actual_buying_power:
-                                trade = r.orders.order_buy_fractional_by_price(ticker,
-                                                                               actual_buying_power,
-                                                                               timeInForce='gfd',
-                                                                               extendedHours=False)
-                            elif buying_power / len(ticker_list) < actual_buying_power:
-                                trade = r.orders.order_buy_fractional_by_price(ticker,
-                                                                               buying_power / len(ticker_list),
-                                                                               timeInForce='gfd',
-                                                                               extendedHours=False)
-                            print(trade)
-                            print("Trade id:", trade['id'])
-                            time.sleep(30)
-                            trade = r.orders.get_stock_order_info(trade['id'])
+                                # Calculate allocation per stock (only for stocks being purchased).
+                                allocation = buying_power / (len(ticker_list) - sell_count)
 
-                            # Check if the trade was filled
-                            # If not, add the ticker to the failed transactions list and try again later.
-                            if trade['state'] != "filled":
-                                print("Trade not filled. Continuing.")
-                                if ticker not in failed_transactions:
-                                    failed_transactions.append(ticker)
-                                continue
-                            print("Purchased", ticker)
+                                # Determine the amount to use for this ticker.
+                                if allocation < 1:
+                                    trade_amount = 1
+                                elif allocation > actual_buying_power:
+                                    trade_amount = actual_buying_power
+                                else:
+                                    trade_amount = allocation
+
+                                print(f"Purchasing {ticker} in the amount of {trade_amount}")
+
+                                # Place the order.
+                                trade = r.orders.order_buy_fractional_by_price(
+                                    ticker, trade_amount, timeInForce='gfd', extendedHours=False
+                                )
+                                print(trade)
+                                print("Trade id:", trade['id'])
+                                time.sleep(30)
+                                trade = r.orders.get_stock_order_info(trade['id'])
+
+                                # Check if the trade was filled
+                                # If not, add the ticker to the failed transactions list and try again later.
+                                if trade['state'] != "filled":
+                                    print("Trade not filled. Continuing.")
+                                    if ticker not in failed_transactions:
+                                        failed_transactions.append(ticker)
+                                    continue
+                                print("Purchased", ticker)
+                                if ticker in failed_transactions:
+                                    failed_transactions.remove(ticker)
+                            else:
+                                print("Not enough buying power. Continuing.")
+                                if ticker in failed_transactions:
+                                    failed_transactions.remove(ticker)
+
+                        if day_trades >= 3: # Cancel all pending DECISIONS if day trade limit is reached. No transactions will be made.
                             if ticker in failed_transactions:
                                 failed_transactions.remove(ticker)
-                        else:
-                            print("Not enough buying power. Continuing.")
-                            if ticker in failed_transactions:
-                                failed_transactions.remove(ticker)
+                            print("Day trade limit reached. Continuing.")
 
-                    # Sell if decision is to sell.
-                    # This will sell all the shares of the stock.
-                    elif decision == "sell" and day_trades < 3:
-                        if ticker in holdings:
-                            print("Selling", ticker)
-                            trade = r.orders.order_sell_fractional_by_quantity(ticker,
-                                                                               float(holdings[ticker]['quantity']),
-                                                                               timeInForce='gfd',
-                                                                               extendedHours=False)
-                            print(trade)
-                            print("Trade id:", trade['id'])
-                            time.sleep(30)
-                            trade = r.orders.get_stock_order_info(trade['id'])
-                            if trade['state'] != "filled":
-                                print("Trade not filled. Continuing.")
-                                if ticker not in failed_transactions:
-                                    failed_transactions.append(ticker)
-                                continue
-                            print("Sold", ticker)
-                            if ticker in failed_transactions:
-                                failed_transactions.remove(ticker)
-                        else:
-                            print(ticker, "not in holdings. Continuing.")
-                            if ticker in failed_transactions:
-                                failed_transactions.remove(ticker)
-
-                    if day_trades >= 3: # Cancel all pending DECISIONS if day trade limit is reached. No transactions will be made.
+                        # Ticker processed
+                        del queued_transactions[ticker]
+                    except Exception as e:
+                        print("Error: ", e)
                         if ticker in failed_transactions:
                             failed_transactions.remove(ticker)
-                        print("Day trade limit reached. Continuing.")
-
-                    # Ticker processed
-                    del queued_transactions[ticker]
+                        del queued_transactions[ticker]
+                        continue
 
             # If all transactions, including failed transactions, are processed, reset the ticker index
             if len(failed_transactions) == 0 and ticker_index >= len(ticker_list):
