@@ -452,14 +452,16 @@ if __name__ == '__main__':
 
                 for sell in sorted_tickers:
                     try:
-                        if queued_transactions[ticker] == "sell":
+                        if queued_transactions[sell] == "sell":
                             sell_count += 1
 
-                            if decision == "sell" and day_trades < 3:
-                                if ticker in holdings:
-                                    print("Selling", ticker)
-                                    trade = r.orders.order_sell_fractional_by_quantity(ticker,
-                                                                                       float(holdings[ticker]['quantity']),
+                            holdings = r.account.build_holdings()
+
+                            if day_trades < 3:
+                                if sell in holdings:
+                                    print("Selling", sell)
+                                    trade = r.orders.order_sell_fractional_by_quantity(sell,
+                                                                                       float(holdings[sell]['quantity']),
                                                                                        timeInForce='gfd',
                                                                                        extendedHours=False)
                                     print(trade)
@@ -468,38 +470,38 @@ if __name__ == '__main__':
                                     trade = r.orders.get_stock_order_info(trade['id'])
                                     if trade['state'] != "filled":
                                         print("Trade not filled. Continuing.")
-                                        if ticker not in failed_transactions:
-                                            failed_transactions.append(ticker)
+                                        if sell not in failed_transactions:
+                                            failed_transactions.append(sell)
                                         continue
-                                    print("Sold", ticker)
-                                    if ticker in failed_transactions:
-                                        failed_transactions.remove(ticker)
+                                    print("Sold", sell)
+                                    if sell in failed_transactions:
+                                        failed_transactions.remove(sell)
                                 else:
-                                    print(ticker, "not in holdings. Continuing.")
-                                    if ticker in failed_transactions:
-                                        failed_transactions.remove(ticker)
+                                    print(sell, "not in holdings. Continuing.")
+                                    if sell in failed_transactions:
+                                        failed_transactions.remove(sell)
 
                             elif day_trades >= 3:  # Cancel all pending DECISIONS if day trade limit is reached. No transactions will be made.
-                                if ticker in failed_transactions:
-                                    failed_transactions.remove(ticker)
-                                del queued_transactions[ticker]
+                                if sell in failed_transactions:
+                                    failed_transactions.remove(sell)
+                                del queued_transactions[sell]
                                 print("Day trade limit reached. Continuing.")
 
-                            del queued_transactions[ticker]
+                            del queued_transactions[sell]
 
                     except Exception as e:
                         print("Error:", e)
-                        if ticker in failed_transactions:
-                            failed_transactions.remove(ticker)
-                        del queued_transactions[ticker]
+                        if sell in failed_transactions:
+                            failed_transactions.remove(sell)
+                        del queued_transactions[sell]
 
                 buying_power = float(r.account.load_phoenix_account(info='account_buying_power')['amount'])
 
                 # Iterate through the sorted list, selling tickers first before buying the rest.
                 # This ensures no leftover buying power and therefore no missed trades.
-                for ticker in sorted_tickers:
+                for buy in sorted_tickers:
                     try:
-                        decision = queued_transactions[ticker]
+                        decision = queued_transactions[buy]
 
                         # Get the currently available buying power.
                         actual_buying_power = float(
@@ -524,11 +526,11 @@ if __name__ == '__main__':
                                 else:
                                     trade_amount = allocation
 
-                                print(f"Purchasing {ticker} in the amount of {trade_amount}")
+                                print(f"Purchasing {buy} in the amount of {trade_amount}")
 
                                 # Place the order.
                                 trade = r.orders.order_buy_fractional_by_price(
-                                    ticker, trade_amount, timeInForce='gfd', extendedHours=False
+                                    buy, trade_amount, timeInForce='gfd', extendedHours=False
                                 )
                                 print(trade)
                                 print("Trade id:", trade['id'])
@@ -539,29 +541,29 @@ if __name__ == '__main__':
                                 # If not, add the ticker to the failed transactions list and try again later.
                                 if trade['state'] != "filled":
                                     print("Trade not filled. Continuing.")
-                                    if ticker not in failed_transactions:
-                                        failed_transactions.append(ticker)
+                                    if buy not in failed_transactions:
+                                        failed_transactions.append(buy)
                                     continue
-                                print("Purchased", ticker)
-                                if ticker in failed_transactions:
-                                    failed_transactions.remove(ticker)
+                                print("Purchased", buy)
+                                if buy in failed_transactions:
+                                    failed_transactions.remove(buy)
                             else:
                                 print("Not enough buying power. Continuing.")
-                                if ticker in failed_transactions:
-                                    failed_transactions.remove(ticker)
+                                if buy in failed_transactions:
+                                    failed_transactions.remove(buy)
 
                         if day_trades >= 3: # Cancel all pending DECISIONS if day trade limit is reached. No transactions will be made.
-                            if ticker in failed_transactions:
-                                failed_transactions.remove(ticker)
+                            if buy in failed_transactions:
+                                failed_transactions.remove(buy)
                             print("Day trade limit reached. Continuing.")
 
                         # Ticker processed
-                        del queued_transactions[ticker]
+                        del queued_transactions[buy]
                     except Exception as e:
                         print("Error: ", e)
-                        if ticker in failed_transactions:
-                            failed_transactions.remove(ticker)
-                        del queued_transactions[ticker]
+                        if buy in failed_transactions:
+                            failed_transactions.remove(buy)
+                        del queued_transactions[buy]
                         continue
 
             # If all transactions, including failed transactions, are processed, reset the ticker index
