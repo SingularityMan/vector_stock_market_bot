@@ -318,9 +318,15 @@ if __name__ == '__main__':
                     ticker_earnings = get_quarterly_earnings(ticker)
 
                     try:
-                        polygon_news = client.list_ticker_news(ticker, limit=3)
+                        # Get today's date
+                        today = datetime.datetime.today()
+
+                        # Format the date
+                        formatted_date = today.strftime('%Y-%m-%d')
+
+                        polygon_news = client.list_ticker_news(ticker, limit=3, order="desc", sort="published_utc")
                         for i, news in enumerate(polygon_news):
-                            all_stock_news.append(news.description)
+                            all_stock_news.append("Date published: "+news.published_utc+"\nDescription: "+news.description)
                     except Exception as e:
                         print("Error:", e, "\nWaiting 3 minutes before continuing.")
                         if ticker not in failed_transactions:
